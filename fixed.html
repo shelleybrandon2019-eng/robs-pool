@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Williams Pool Data</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#03111f}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe id="outer" src="williams.html?v=4"></iframe><script>
+const outer=document.getElementById('outer');
+function install(){
+ try{
+  const od=outer.contentDocument;
+  const inner=od&&od.querySelector('iframe');
+  if(!inner)return setTimeout(install,400);
+  const apply=()=>{
+   try{
+    const d=inner.contentDocument;
+    if(!d)return setTimeout(apply,400);
+    const form=d.getElementById('testForm');
+    if(!form)return setTimeout(apply,400);
+    if(form.dataset.forceSave==='1')return;
+    form.dataset.forceSave='1';
+    form.addEventListener('submit',function(e){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      const get=id=>d.getElementById(id)?.value??'';
+      const number=id=>get(id)===''?null:Number(get(id));
+      let saved;
+      try{saved=JSON.parse(localStorage.getItem('robsPoolCloud')||'{"tests":[],"maintenance":[],"equipment":[]}')}catch{saved={tests:[],maintenance:[],equipment:[]}}
+      if(!Array.isArray(saved.tests))saved.tests=[];
+      const test={id:'local-'+Date.now(),date:get('date')||new Date().toISOString(),fc:number('fc'),cc:number('cc'),ph:number('ph'),ta:number('ta'),ch:number('ch'),cya:number('cya'),salt:number('salt'),temp:number('temp'),pressure:number('pressure'),clarity:get('clarity'),backwashed:get('backwashed'),vacuumed:get('vacuumed'),waterfall:get('waterfall'),chemicals:get('chemicals'),notes:get('notes'),photo:'',created_at:new Date().toISOString(),local_only:true};
+      const preview=d.getElementById('preview')||d.querySelector('.photo-preview');
+      if(preview&&preview.src&&preview.src.startsWith('data:image'))test.photo=preview.src;
+      saved.tests.unshift(test);
+      try{localStorage.setItem('robsPoolCloud',JSON.stringify(saved))}catch(err){test.photo='';localStorage.setItem('robsPoolCloud',JSON.stringify(saved));}
+      alert('Pool test saved successfully.');
+      inner.contentWindow.location.reload();
+    },true);
+    const note=d.createElement('div');note.textContent='SAVE SYSTEM READY';note.style.cssText='position:fixed;right:12px;top:12px;z-index:99999;background:#063;color:white;padding:8px 11px;border-radius:9px;font:700 11px Arial;box-shadow:0 4px 15px #0008';d.body.appendChild(note);setTimeout(()=>note.remove(),3000);
+   }catch{x=setTimeout(apply,500)}
+  };
+  if(inner.contentDocument&&inner.contentDocument.readyState==='complete')apply();else inner.addEventListener('load',apply,{once:true});
+ }catch(e){setTimeout(install,500)}
+}
+outer.addEventListener('load',install);setTimeout(install,1000);
+</script></body></html>
